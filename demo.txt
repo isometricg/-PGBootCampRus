@@ -1,0 +1,98 @@
+database:
+create database demo;
+
+участники:
+CREATE TABLE IF NOT EXISTS participants
+(
+    id SERIAL PRIMARY KEY,
+    is_online BOOLEAN DEFAULT false,
+    registered_at timestamp(0) without time zone DEFAULT now(),
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT
+);
+
+лекции:
+CREATE TABLE IF NOT EXISTS lectures
+(
+    id SERIAL PRIMARY KEY,
+    is_master_class BOOLEAN DEFAULT false,
+    speaker_id INTEGER,
+    duration INTEGER DEFAULT 60,
+    scheduled_at timestamp(0) without time zone DEFAULT now(),
+    topic TEXT,
+    description TEXT,
+    CONSTRAINT fk_speaker_id
+      FOREIGN KEY(speaker_id) 
+	  REFERENCES participants(id)
+	  ON DELETE SET NULL
+);
+
+CREATE INDEX ON lectures(speaker_id);
+
+оценки лекций участниками:
+CREATE TABLE IF NOT EXISTS lectures_ratings
+(
+    id SERIAL PRIMARY KEY,
+    participant_id INTEGER NOT NULL,
+    lecture_id INTEGER NOT NULL,
+    rating INTEGER NOT NULL,
+    submitted_at  timestamp(0) without time zone DEFAULT now(),
+    CONSTRAINT fk_participant_id
+      FOREIGN KEY(participant_id) 
+	  REFERENCES participants(id)
+	  ON DELETE SET NULL,
+    CONSTRAINT fk_lecture_id
+      FOREIGN KEY(lecture_id) 
+	  REFERENCES lectures(id)
+	  ON DELETE SET NULL
+);
+
+CREATE INDEX ON lectures_ratings(participant_id);
+CREATE INDEX ON lectures_ratings(lecture_id);
+
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 1 FN','Participant 1 LN','Participant 1 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 2 FN','Participant 2 LN','Participant 2 email',FALSE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 3 FN','Participant 3 LN','Participant 3 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 4 FN','Participant 4 LN','Participant 4 email',FALSE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 5 FN','Participant 5 LN','Participant 5 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 6 FN','Participant 6 LN','Participant 6 email',FALSE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 7 FN','Participant 7 LN','Participant 7 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 8 FN','Participant 8 LN','Participant 8 email',FALSE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 9 FN','Participant 9 LN','Participant 9 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 10 FN','Participant 10 LN','Participant 10 email',FALSE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 11 FN','Participant 11 LN','Participant 11 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 12 FN','Participant 12 LN','Participant 12 email',FALSE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 13 FN','Participant 13 LN','Participant 13 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 14 FN','Participant 14 LN','Participant 14 email',FALSE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 15 FN','Participant 15 LN','Participant 15 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 16 FN','Participant 16 LN','Participant 16 email',FALSE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 17 FN','Participant 17 LN','Participant 17 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 18 FN','Participant 18 LN','Participant 18 email',FALSE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 19 FN','Participant 19 LN','Participant 19 email',TRUE);
+INSERT INTO participants(first_name, last_name, email, is_online) values('Participant 20 FN','Participant 20 LN','Participant 20 email',FALSE);
+INSERT INTO lectures(topic, description, speaker_id, is_master_class) values('Lecture A','Lecture A description',1,TRUE);
+INSERT INTO lectures(topic, description, speaker_id, is_master_class) values('Lecture B','Lecture B description',2,FALSE);
+INSERT INTO lectures(topic, description, speaker_id, is_master_class) values('Lecture C','Lecture C description',3,TRUE);
+INSERT INTO lectures(topic, description, speaker_id, is_master_class) values('Lecture D','Lecture D description',4,FALSE);
+INSERT INTO lectures(topic, description, speaker_id, is_master_class) values('Lecture E','Lecture E description',5,TRUE);
+
+insert into lectures_ratings (participant_id, lecture_id, rating)
+SELECT  FLOOR(RANDOM()*(20- 1 + 1)) + 1, FLOOR(RANDOM()*(5- 1 + 1)) + 1, FLOOR(RANDOM()*(5 - 1 + 1)) + 1
+FROM    generate_series(1,100) num;
+
+select participant_id, lecture_id, count(*)  from lectures_ratings group by participant_id, lecture_id having count(*) > 1;
+
+DELETE  FROM
+    lectures_ratings a
+        USING lectures_ratings b
+WHERE
+    a.id > b.id
+    AND a.participant_id = b.participant_id
+    AND a.lecture_id = b.lecture_id;
+
+alter table participants add column token text;
+update participants set token = (SELECT array_to_string(ARRAY(SELECT chr((48 + round(random() * 59)) :: integer) FROM generate_series(1,128)), ''));
+
+select  p.first_name || ' ' || p.last_name, l.topic, lr.rating from lectures_ratings lr, participants p, lectures l where lr.participant_id = p.id and lr.lecture_id = l.id order by p.id;
+
