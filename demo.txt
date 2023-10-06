@@ -1,3 +1,10 @@
+Для целей данного мастер класса мы будем использовать 
+кластер PostgreSQL (tantor be ) 15, установленный на ОС linux
+В кластере помимо трех баз данных создаваемых по умолчанию: postgres, template0 и template1
+мы создали дополнительную базу данных demo.
+в ней у нас самая простая структура:
+
+
 database:
 create database demo;
 
@@ -80,8 +87,6 @@ INSERT INTO lectures(topic, description, speaker_id, is_master_class) values('Le
 insert into lectures_ratings (participant_id, lecture_id, rating)
 SELECT  FLOOR(RANDOM()*(20- 1 + 1)) + 1, FLOOR(RANDOM()*(5- 1 + 1)) + 1, FLOOR(RANDOM()*(5 - 1 + 1)) + 1
 FROM    generate_series(1,100) num;
-
-select participant_id, lecture_id, count(*)  from lectures_ratings group by participant_id, lecture_id having count(*) > 1;
 
 DELETE  FROM
     lectures_ratings a
